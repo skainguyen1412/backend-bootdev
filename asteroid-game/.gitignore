@@ -2,3 +2,4 @@
 __pycache__/
 *.py[cod]
 game_state.jsonl
+game_events.jsonl
