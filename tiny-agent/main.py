@@ -13,7 +13,9 @@ def main():
 
     parser = argparse.ArgumentParser(description="Chatbot")
     parser.add_argument("user_prompt", type=str, help="User prompt")
+    parser.add_argument("--verbose", action="store_true", help="Enable verbose output")
     args = parser.parse_args()
+
     client = OpenAI(base_url="https://openrouter.ai/api/v1", api_key=api_key)
 
     messages = [{"role": "user", "content": args.user_prompt}]
@@ -26,9 +28,11 @@ def main():
     if not responses.usage:
         raise RuntimeError("Response usage information not found")
 
-    print(f"User prompt: {args.user_prompt}")
-    print(f"Prompt tokens: {responses.usage.prompt_tokens}")
-    print(f"Response tokens: {responses.usage.completion_tokens}")
+    if args.verbose:
+        print(f"User prompt: {args.user_prompt}")
+        print(f"Prompt tokens: {responses.usage.prompt_tokens}")
+        print(f"Response tokens: {responses.usage.completion_tokens}")
+
     print(f"Response: \n{responses.choices[0].message.content}")
 
 
