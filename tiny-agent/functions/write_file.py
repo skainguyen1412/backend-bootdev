@@ -2,6 +2,28 @@ import os
 from os.path import isdir
 
 
+schema_write_file = {
+    "type": "function",
+    "function": {
+        "name": "write_file",
+        "description": "Writes content to a file within the working directory, creating parent directories when needed",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "file_path": {
+                    "type": "string",
+                    "description": "Path to the file to write, relative to the working directory",
+                },
+                "content": {
+                    "type": "string",
+                    "description": "Content to write to the file",
+                },
+            },
+        },
+    },
+}
+
+
 def write_file(working_directory: str, file_path: str, content: str) -> str:
     try:
         working_dir_abs = os.path.abspath(working_directory)
