@@ -6,7 +6,12 @@ schema_run_python_file = {
     "type": "function",
     "function": {
         "name": "run_python_file",
-        "description": "Executes a Python file within the working directory and returns its output",
+        "description": (
+            "Run a Python file and return its output. This is the only tool to choose when "
+            "the user asks to run, execute, or test a specific Python file. Call it directly "
+            "with the path from the user. Never call get_files_info or get_file_content first: "
+            "this tool already checks whether the file exists and returns an error if needed."
+        ),
         "parameters": {
             "type": "object",
             "properties": {
