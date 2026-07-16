@@ -26,33 +26,39 @@ def main():
         {"role": "user", "content": args.user_prompt},
     ]
 
-    responses = client.chat.completions.create(
-        model="openrouter/free", messages=messages, tools=available_functions
-    )
+    for _ in range(20):
+        responses = client.chat.completions.create(
+            model="openrouter/free", messages=messages, tools=available_functions
+        )
 
-    if not responses.usage:
-        raise RuntimeError("Response usage information not found")
+        if not responses.usage:
+            raise RuntimeError("Response usage information not found")
 
-    if args.verbose:
-        print(f"User prompt: {args.user_prompt}")
-        print(f"Prompt tokens: {responses.usage.prompt_tokens}")
-        print(f"Response tokens: {responses.usage.completion_tokens}")
+        if args.verbose:
+            print(f"User prompt: {args.user_prompt}")
+            print(f"Prompt tokens: {responses.usage.prompt_tokens}")
+            print(f"Response tokens: {responses.usage.completion_tokens}")
 
-    message = responses.choices[0].message
+        message = responses.choices[0].message
+        messages.append(message)
 
-    print(f"Response: \n{message.content}")
+        print(f"Response: \n{message.content}")
 
-    if message.tool_calls:
-        for tool_call in message.tool_calls:
-            function_args = json.loads(tool_call.function.arguments or "{}")
-            print(f"Calling function: {tool_call.function.name}({function_args})")
-            result_message = call_function(tool_call, args.verbose)
+        if message.tool_calls:
+            for tool_call in message.tool_calls:
+                function_args = json.loads(tool_call.function.arguments or "{}")
+                print(f"Calling function: {tool_call.function.name}({function_args})")
+                result_message = call_function(tool_call, args.verbose)
+                messages.append(result_message)
 
-            if not result_message["content"]:
-                raise Exception("Call function should return content")
+                if not result_message["content"]:
+                    raise Exception("Call function should return content")
 
-            if args.verbose:
-                print(f"-> {result_message['content']}")
+                if args.verbose:
+                    print(f"-> {result_message['content']}")
+        else:
+            return
+    print("Maximum loop reached and no concluded responses")
 
 
 if __name__ == "__main__":
