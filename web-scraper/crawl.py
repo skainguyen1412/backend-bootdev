@@ -110,12 +110,39 @@ def get_html(url):
     response = requests.get(url, headers={"User-Agent": "BootCrawler/1.0"})
 
     if response.status_code >= 400:
-        raise RuntimeError("Error response status code")
+        raise RuntimeError(f"Error response status code: {response.status_code}")
 
-    if response.headers["content-type"] != "text/html":
+    content_type = response.headers.get("content-type", "")
+
+    if "text/html" not in content_type.lower():
         raise RuntimeError("content-type is not text/html")
 
     if not response.text:
         raise RuntimeError("Empty response value")
 
     return response.text
+
+
+def crawl_page(base_url, current_url: str, page_data: dict[str, PageData]):
+    if not current_url:
+        return
+
+    url_split = urlsplit(current_url)
+    base_url_split = urlsplit(base_url)
+
+    if url_split.netloc != base_url_split.netloc:
+        return
+
+    normalize = normalize_url(current_url)
+
+    if normalize in page_data:
+        return
+
+    html = get_html(current_url)
+    print(f"Get html from {current_url}")
+    p_d = extract_page_data(html, current_url)
+    page_data[normalize] = p_d
+    urls = get_urls_from_html(html, current_url)
+
+    for url in urls:
+        crawl_page(base_url, url, page_data)
