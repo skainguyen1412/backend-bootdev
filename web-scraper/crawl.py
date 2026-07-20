@@ -1,6 +1,7 @@
 from typing import TypedDict
 from urllib.parse import urljoin, urlsplit
 from bs4 import BeautifulSoup, Tag
+import requests
 
 
 class PageData(TypedDict):
@@ -88,8 +89,6 @@ def get_images_from_html(html, base_url):
 
 
 def extract_page_data(html: str, page_url: str) -> PageData:
-    soup = BeautifulSoup(html, "html.parser")
-
     heading = get_heading_from_html(html)
 
     first_paragraph = get_first_paragraph_from_html(html)
@@ -105,3 +104,18 @@ def extract_page_data(html: str, page_url: str) -> PageData:
         "outgoing_links": outgoing_links,
         "url": page_url,
     }
+
+
+def get_html(url):
+    response = requests.get(url, headers={"User-Agent": "BootCrawler/1.0"})
+
+    if response.status_code >= 400:
+        raise RuntimeError("Error response status code")
+
+    if response.headers["content-type"] != "text/html":
+        raise RuntimeError("content-type is not text/html")
+
+    if not response.text:
+        raise RuntimeError("Empty response value")
+
+    return response.text

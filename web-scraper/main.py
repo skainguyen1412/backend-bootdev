@@ -1,4 +1,7 @@
 import sys
+import requests
+
+from crawl import get_html
 
 
 def main():
@@ -16,6 +19,8 @@ def main():
 
     BASE_URL = sys.argv[1]
     print(f"starting crawl of: {BASE_URL}")
+
+    print(get_html(BASE_URL))
 
 
 if __name__ == "__main__":
