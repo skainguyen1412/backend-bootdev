@@ -5,6 +5,7 @@ from crawl import (
     get_first_paragraph_from_html,
     get_urls_from_html,
     get_images_from_html,
+    extract_page_data,
 )
 
 
@@ -161,6 +162,124 @@ class TestCrawl(unittest.TestCase):
             "https://crawler-test.com/products/photo.jpeg",
         ]
         self.assertEqual(actual, expected)
+
+    def test_extract_page_data_basic(self):
+        input_url = "https://crawler-test.com"
+        input_body = """<html><body>
+            <h1>Test Title</h1>
+            <p>This is the first paragraph.</p>
+            <a href="/link1">Link 1</a>
+            <img src="/image1.jpg" alt="Image 1">
+        </body></html>"""
+        actual = extract_page_data(input_body, input_url)
+        expected = {
+            "url": "https://crawler-test.com",
+            "heading": "Test Title",
+            "first_paragraph": "This is the first paragraph.",
+            "outgoing_links": ["https://crawler-test.com/link1"],
+            "image_urls": ["https://crawler-test.com/image1.jpg"],
+        }
+        self.assertEqual(actual, expected)
+
+    def test_extract_page_data_empty_html(self):
+        input_url = "https://crawler-test.com/page"
+
+        actual = extract_page_data("", input_url)
+
+        expected = {
+            "url": input_url,
+            "heading": "",
+            "first_paragraph": "",
+            "outgoing_links": [],
+            "image_urls": [],
+        }
+        self.assertEqual(actual, expected)
+
+    def test_extract_page_data_multiple_urls_and_missing_attributes(self):
+        input_url = "https://crawler-test.com/products/page.html"
+        input_body = """
+        <html>
+            <body>
+                <h1>Products</h1>
+                <p>Product list.</p>
+
+                <a href="/about">About</a>
+                <a href="./details">Details</a>
+                <a href="https://example.com">External</a>
+                <a>Missing href</a>
+
+                <img src="/logo.png">
+                <img src="./photo.jpg">
+                <img src="https://cdn.example.com/banner.png">
+                <img alt="Missing src">
+            </body>
+        </html>
+        """
+
+        actual = extract_page_data(input_body, input_url)
+
+        expected = {
+            "url": input_url,
+            "heading": "Products",
+            "first_paragraph": "Product list.",
+            "outgoing_links": [
+                "https://crawler-test.com/about",
+                "https://crawler-test.com/products/details",
+                "https://example.com",
+            ],
+            "image_urls": [
+                "https://crawler-test.com/logo.png",
+                "https://crawler-test.com/products/photo.jpg",
+                "https://cdn.example.com/banner.png",
+            ],
+        }
+        self.assertEqual(actual, expected)
+
+    def test_extract_page_data_falls_back_to_h2(self):
+        input_url = "https://crawler-test.com"
+        input_body = """
+        <html>
+            <body>
+                <h2>Fallback Heading</h2>
+            </body>
+        </html>
+        """
+
+        actual = extract_page_data(input_body, input_url)
+
+        self.assertEqual(actual["heading"], "Fallback Heading")
+
+    def test_extract_page_data_prioritizes_h1_over_h2(self):
+        input_url = "https://crawler-test.com"
+        input_body = """
+        <html>
+            <body>
+                <h2>Secondary Heading</h2>
+                <h1>Primary Heading</h1>
+            </body>
+        </html>
+        """
+
+        actual = extract_page_data(input_body, input_url)
+
+        self.assertEqual(actual["heading"], "Primary Heading")
+
+    def test_extract_page_data_prioritizes_paragraph_inside_main(self):
+        input_url = "https://crawler-test.com"
+        input_body = """
+        <html>
+            <body>
+                <p>Paragraph outside main.</p>
+                <main>
+                    <p>Paragraph inside main.</p>
+                </main>
+            </body>
+        </html>
+        """
+
+        actual = extract_page_data(input_body, input_url)
+
+        self.assertEqual(actual["first_paragraph"], "Paragraph inside main.")
 
 
 if __name__ == "__main__":
