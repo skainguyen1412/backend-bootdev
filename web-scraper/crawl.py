@@ -1,4 +1,4 @@
-from urllib.parse import urlsplit
+from urllib.parse import urljoin, urlsplit
 from bs4 import BeautifulSoup, Tag
 
 
@@ -39,3 +39,40 @@ def get_first_paragraph_from_html(html: str) -> str:
         return p.get_text(strip=True)
 
     return ""
+
+
+def get_urls_from_html(html, base_url):
+    soup = BeautifulSoup(html, "html.parser")
+
+    a = soup.find_all("a")
+
+    result = []
+
+    for a_tag in a:
+        if isinstance(a_tag, Tag):
+            href = a_tag.get("href")
+
+            if isinstance(href, str):
+                url_join = urljoin(base_url, href)
+                result.append(url_join)
+
+    return result
+
+
+def get_images_from_html(html, base_url):
+    soup = BeautifulSoup(html, "html.parser")
+
+    images = soup.find_all("img")
+
+    result = []
+
+    for image in images:
+        if isinstance(image, Tag):
+            src = image.get("src")
+
+            if isinstance(src, str):
+                url_join = urljoin(base_url, src)
+
+                result.append(url_join)
+
+    return result
