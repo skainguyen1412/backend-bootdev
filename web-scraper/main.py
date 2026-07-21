@@ -1,10 +1,10 @@
+import asyncio
 import sys
-import requests
 
-from crawl import crawl_page, get_html
+from async_crawler import crawl_site_async
 
 
-def main():
+async def main_async():
     print("Hello from web-scraper!")
 
     argument_len = len(sys.argv)
@@ -20,8 +20,11 @@ def main():
     BASE_URL = sys.argv[1]
     print(f"starting crawl of: {BASE_URL}")
 
-    print(crawl_page(BASE_URL, BASE_URL, {}))
+    page_data = await crawl_site_async(BASE_URL, 5)
+
+    for data in page_data.values():
+        print(data)
 
 
 if __name__ == "__main__":
-    main()
+    asyncio.run(main_async())
