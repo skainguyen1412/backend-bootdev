@@ -2,6 +2,7 @@ import asyncio
 import sys
 
 from async_crawler import crawl_site_async
+from json_report import write_json_report
 
 
 async def main_async():
@@ -25,8 +26,10 @@ async def main_async():
 
     page_data = await crawl_site_async(BASE_URL, int(max_concurrency), int(max_pages))
 
-    for data in page_data.values():
-        print(data)
+    # for data in page_data.values():
+    #     print(data)
+
+    write_json_report(page_data)
 
 
 if __name__ == "__main__":
