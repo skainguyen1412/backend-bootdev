@@ -35,17 +35,19 @@ Tài liệu này chứa các câu hỏi ôn tập và thử thách giúp bạn c
     await asyncio.gather(*tasks, return_exceptions=True)
     ```
 - **Câu hỏi:**
-  1. Tham số `return_exceptions=True` có ý nghĩa gì?
-     > Giúp coi các lỗi (Exceptions) như những kết quả trả về bình thường thay vì quăng lỗi làm dừng chương trình. Danh sách trả về từ `gather` sẽ chứa cả dữ liệu cào thành công lẫn các đối tượng Exception của những URL bị lỗi.
-  2. Nếu không đặt `return_exceptions=True` và 1 URL trong danh sách bị lỗi kết nối (Timeout/DNS fail), chuyện gì sẽ xảy ra với các URL khác đang chạy song song trong cùng đợt `gather`?
-     > Lỗi (Exception) sẽ lập tức bị raise ra ngoài ngay tại dòng `await gather`, làm ngắt luồng thực thi chính. Các task còn lại vẫn chạy ngầm trong background nhưng kết quả của chúng sẽ bị bỏ rơi và không thể thu thập được.
+    1. Tham số `return_exceptions=True` có ý nghĩa gì?
+        > Giúp coi các lỗi (Exceptions) như những kết quả trả về bình thường thay vì quăng lỗi làm dừng chương trình. Danh sách trả về từ `gather` sẽ chứa cả dữ liệu cào thành công lẫn các đối tượng Exception của những URL bị lỗi.
+    2. Nếu không đặt `return_exceptions=True` và 1 URL trong danh sách bị lỗi kết nối (Timeout/DNS fail), chuyện gì sẽ xảy ra với các URL khác đang chạy song song trong cùng đợt `gather`?
+        > Lỗi (Exception) sẽ lập tức bị raise ra ngoài ngay tại dòng `await gather`, làm ngắt luồng thực thi chính. Các task còn lại vẫn chạy ngầm trong background nhưng kết quả của chúng sẽ bị bỏ rơi và không thể thu thập được.
 
 ### 4. Async Context Manager (`__aenter__` & `__aexit__`)
 
 - Lớp `AsyncCrawler` triển khai `async with AsyncCrawler(...) as crawler:`
 - **Câu hỏi:**
-    1. Việc tạo duy nhất một `aiohttp.ClientSession` trong `__aenter__` mang lại lợi ích gì về mặt hiệu năng (Connection Pooling, Keep-Alive) so với việc tạo mới `ClientSession` mỗi lần fetch HTML?
+  1. Việc tạo duy nhất một `aiohttp.ClientSession` trong `__aenter__` mang lại lợi ích gì về mặt hiệu năng (Connection Pooling, Keep-Alive) so với việc tạo mới `ClientSession` mỗi lần fetch HTML?
+     > Tận dụng Connection Pooling và HTTP Keep-Alive để tái sử dụng các kết nối TCP/TLS đã mở sẵn. Giúp loại bỏ chi phí bắt tay (TCP/TLS Handshake) cho mỗi request, giảm độ trễ (latency), tiết kiệm RAM/CPU và tránh làm cạn kiệt socket của hệ điều hành.
     2. Chuyện gì xảy ra nếu chương trình bị crash giữa chừng? `__aexit__` giúp giải quyết vấn đề quản lý tài nguyên như thế nào?
+        > Crash giữa chừng sẽ unsubscribe và clear đi để tránh memory leak
 
 ---
 
