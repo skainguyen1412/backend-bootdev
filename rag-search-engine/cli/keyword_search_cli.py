@@ -29,7 +29,7 @@ def main() -> None:
 
                 for movie in movies:
                     title = movie["title"]
-                    if args.query in title:
+                    if args.query.lower() in title.lower():
                         found.append(title)
 
                 count = 0
