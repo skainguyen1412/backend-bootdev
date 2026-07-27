@@ -1,5 +1,6 @@
 import argparse
 import json
+import string
 
 
 def main() -> None:
@@ -29,7 +30,8 @@ def main() -> None:
 
                 for movie in movies:
                     title = movie["title"]
-                    if args.query.lower() in title.lower():
+                    t = str.maketrans("", "", string.punctuation)
+                    if args.query.lower().translate(t) in title.lower().translate(t):
                         found.append(title)
 
                 count = 0
