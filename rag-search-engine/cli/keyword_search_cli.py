@@ -1,4 +1,5 @@
 import argparse
+import json
 
 
 def main() -> None:
@@ -14,6 +15,32 @@ def main() -> None:
         case "search":
             # print the search query here
             print(f"Searching for: {args.query}")
+            file_path = "data/movies.json"
+
+            with open(file_path) as f:
+                data: dict = json.load(f)
+
+                movies = data.get("movies")
+
+                found = []
+
+                if not movies:
+                    return
+
+                for movie in movies:
+                    title = movie["title"]
+                    if args.query in title:
+                        found.append(title)
+
+                count = 0
+                for title in found:
+                    count += 1
+
+                    if count > 5:
+                        return
+
+                    print(f"{count}: {title}")
+
         case _:
             parser.print_help()
 
