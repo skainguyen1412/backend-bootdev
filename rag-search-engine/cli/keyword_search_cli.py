@@ -3,8 +3,24 @@ import json
 import string
 
 
-movies_data = json.load(open("data/movies.json")).get("movies")
-stop_words_data = open("data/stopwords.txt", "r").read().splitlines()
+def load_movies():
+    with open("data/movies.json") as f:
+        try:
+            return json.load(f).get("movies")
+        except Exception as e:
+            raise Exception(f"Lỗi nạp movies.json: {e}")
+
+
+def load_stop_words():
+    with open("data/stopwords.txt") as f:
+        try:
+            return f.read().splitlines()
+        except Exception as e:
+            raise Exception(f"Lỗi nạp stopwords.txt: {e}")
+
+
+movies_data = load_movies()
+stop_words_data = load_stop_words()
 table_punctation = str.maketrans("", "", string.punctuation)
 
 
