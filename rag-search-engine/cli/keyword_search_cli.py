@@ -3,7 +3,7 @@ import json
 import string
 import pickle
 import os
-from typing import Any
+from typing import Any, Counter
 from nltk.stem import PorterStemmer
 
 
@@ -39,10 +39,20 @@ def preprocess(input: str):
     return list(arr)
 
 
+def single_token(input: str):
+    result = preprocess(input)
+
+    if len(result) != 1:
+        raise ValueError("Should only one token")
+
+    return result[0]
+
+
 class InvertedIndex:
     def __init__(self):
         self.index: dict[str, set[int]] = {}
         self.docmap: dict[int, Any] = {}
+        self.term_frequencies: dict[int, Counter] = {}
 
     def __add_document(self, doc_id, text):
         text_arr = preprocess(text)
@@ -52,6 +62,17 @@ class InvertedIndex:
                 self.index[text].add(doc_id)
             else:
                 self.index[text] = {doc_id}
+
+            if doc_id in self.term_frequencies:
+                self.term_frequencies[doc_id][text] += 1
+            else:
+                self.term_frequencies[doc_id] = Counter([text])
+
+    def get_tf(self, doc_id, term):
+        if doc_id in self.term_frequencies:
+            return self.term_frequencies[doc_id][term]
+        else:
+            return 0
 
     def get_documents(self, term):
         arr = self.index.get(term)
@@ -78,6 +99,9 @@ class InvertedIndex:
         with open("cache/docmap.pkl", "wb") as f:
             pickle.dump(self.docmap, f)
 
+        with open("cache/term_frequencies.pkl", "wb") as f:
+            pickle.dump(self.term_frequencies, f)
+
     def load(self):
         try:
             with open("cache/index.pkl", "rb") as f:
@@ -85,6 +109,9 @@ class InvertedIndex:
 
             with open("cache/docmap.pkl", "rb") as f:
                 self.docmap = pickle.load(f)
+
+            with open("cache/term_frequencies.pkl", "rb") as f:
+                self.term_frequencies = pickle.load(f)
         except FileNotFoundError:
             raise FileNotFoundError()
 
@@ -103,14 +130,18 @@ def main() -> None:
     search_parser.add_argument("query", type=str, help="Search query")
     subparsers.add_parser("build", help="Build inverted index")
 
+    tf_parser = subparsers.add_parser("tf", help="Get term frequencies")
+    tf_parser.add_argument("doc_id", type=int, help="Document id")
+    tf_parser.add_argument("term", type=str, help="Term")
+
     args = parser.parse_args()
+
+    inverted_index = InvertedIndex()
 
     match args.command:
         case "search":
             # print the search query here
             print(f"Searching for: {args.query}")
-
-            inverted_index = InvertedIndex()
 
             inverted_index.load()
 
@@ -140,6 +171,13 @@ def main() -> None:
 
         case "build":
             build_command()
+
+        case "tf":
+            doc_id = args.doc_id
+            term = args.term
+            inverted_index.load()
+            single_token_term = single_token(term)
+            print(inverted_index.get_tf(doc_id, single_token_term))
 
         case _:
             parser.print_help()
