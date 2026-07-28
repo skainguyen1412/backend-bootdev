@@ -3,6 +3,7 @@ import json
 import string
 import pickle
 import os
+from typing import Any
 from nltk.stem import PorterStemmer
 
 
@@ -41,7 +42,7 @@ def preprocess(input: str):
 class InvertedIndex:
     def __init__(self):
         self.index: dict[str, set[int]] = {}
-        self.docmap: dict = {}
+        self.docmap: dict[int, Any] = {}
 
     def __add_document(self, doc_id, text):
         text_arr = preprocess(text)
@@ -75,15 +76,21 @@ class InvertedIndex:
         with open("cache/docmap.pkl", "wb") as f:
             pickle.dump(self.docmap, f)
 
+    def load(self):
+        try:
+            with open("cache/index.pkl", "rb") as f:
+                self.index = pickle.load(f)
+
+            with open("cache/docmap.pkl", "rb") as f:
+                self.docmap = pickle.load(f)
+        except FileNotFoundError:
+            raise FileNotFoundError()
+
 
 def build_command():
     inverted_index = InvertedIndex()
-
     inverted_index.build()
     inverted_index.save()
-    docs = inverted_index.get_documents("merida")
-    if docs:
-        print(f"First document for token 'merida' = {docs[0]}")
 
 
 def main() -> None:
@@ -103,29 +110,34 @@ def main() -> None:
 
             found = []
 
-            if not STOP_WORDS_DATA:
-                return
+            inverted_index = InvertedIndex()
 
-            if not MOVIES_DATA:
-                return
+            inverted_index.load()
 
-            query_arr = preprocess(args.query)
+            if not inverted_index.index:
+                print("Index not exist")
+                exit(1)
 
-            for movie in MOVIES_DATA:
-                title_movie = movie["title"]
-                title_arr = preprocess(title_movie)
+            queries = preprocess(args.query)
+            count = 0
 
-                for query in query_arr:
-                    found_match = False
-                    for title in title_arr:
-                        if query in title:
-                            found.append(title_movie)
-                            found_match = True
-                            break
-                    if found_match:
+            for query in queries:
+                ids = inverted_index.index.get(query)
+
+                if not ids:
+                    continue
+
+                for id in ids:
+                    count += 1
+
+                    if count > 5:
                         break
 
-            count = 0
+                    movie = inverted_index.docmap.get(id)
+
+                    if movie:
+                        print(movie["title"], id)
+
             for title in found:
                 count += 1
 
