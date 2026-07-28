@@ -1,6 +1,7 @@
 import argparse
 import json
 import string
+from nltk.stem import PorterStemmer
 
 
 def load_movies():
@@ -19,16 +20,16 @@ def load_stop_words():
             raise Exception(f"Lỗi nạp stopwords.txt: {e}")
 
 
-movies_data = load_movies()
-stop_words_data = load_stop_words()
-table_punctation = str.maketrans("", "", string.punctuation)
+MOVIES_DATA = load_movies()
+STOP_WORDS_DATA = load_stop_words()
+TABLE_PUNCTUATION = str.maketrans("", "", string.punctuation)
 
 
 def preprocess(input: str):
     input = input.lower()
-    input = input.translate(table_punctation)
+    input = input.translate(TABLE_PUNCTUATION)
     arr = input.split()
-    arr = list(filter(lambda x: x not in stop_words_data, arr))
+    arr = list(filter(lambda x: x not in STOP_WORDS_DATA, arr))
 
     return arr
 
@@ -49,13 +50,13 @@ def main() -> None:
 
             found = []
 
-            if not stop_words_data:
+            if not STOP_WORDS_DATA:
                 return
 
-            if not movies_data:
+            if not MOVIES_DATA:
                 return
 
-            for movie in movies_data:
+            for movie in MOVIES_DATA:
                 title_movie = movie["title"]
                 title_arr = preprocess(title_movie)
                 query_arr = preprocess(args.query)
