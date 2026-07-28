@@ -29,10 +29,20 @@ def main() -> None:
                     return
 
                 for movie in movies:
-                    title = movie["title"]
+                    title_movie = movie["title"]
                     t = str.maketrans("", "", string.punctuation)
-                    if args.query.lower().translate(t) in title.lower().translate(t):
-                        found.append(title)
+                    title_arr = title_movie.lower().translate(t).split()
+                    query_arr = args.query.lower().translate(t).split()
+
+                    for query in query_arr:
+                        found_match = False
+                        for title in title_arr:
+                            if query in title:
+                                found.append(title_movie)
+                                found_match = True
+                                break
+                        if found_match:
+                            break
 
                 count = 0
                 for title in found:
