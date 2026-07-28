@@ -59,7 +59,9 @@ class InvertedIndex:
         if not arr:
             return
 
-        return list(sorted(arr))
+        sorted_arr = sorted(arr)
+
+        return list(sorted_arr)
 
     def build(self):
         for movie in MOVIES_DATA:
@@ -108,8 +110,6 @@ def main() -> None:
             # print the search query here
             print(f"Searching for: {args.query}")
 
-            found = []
-
             inverted_index = InvertedIndex()
 
             inverted_index.load()
@@ -122,7 +122,7 @@ def main() -> None:
             count = 0
 
             for query in queries:
-                ids = inverted_index.index.get(query)
+                ids = inverted_index.get_documents(query)
 
                 if not ids:
                     continue
@@ -137,14 +137,6 @@ def main() -> None:
 
                     if movie:
                         print(movie["title"], id)
-
-            for title in found:
-                count += 1
-
-                if count > 5:
-                    return
-
-                print(f"{count}: {title}")
 
         case "build":
             build_command()
