@@ -3,6 +3,20 @@ import json
 import string
 
 
+movies_data = json.load(open("data/movies.json")).get("movies")
+stop_words_data = open("data/stopwords.txt", "r").read().splitlines()
+table_punctation = str.maketrans("", "", string.punctuation)
+
+
+def preprocess(input: str):
+    input = input.lower()
+    input = input.translate(table_punctation)
+    arr = input.split()
+    arr = list(filter(lambda x: x not in stop_words_data, arr))
+
+    return arr
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description="Keyword Search CLI")
     subparsers = parser.add_subparsers(dest="command", help="Available commands")
@@ -16,42 +30,38 @@ def main() -> None:
         case "search":
             # print the search query here
             print(f"Searching for: {args.query}")
-            file_path = "data/movies.json"
 
-            with open(file_path) as f:
-                data: dict = json.load(f)
+            found = []
 
-                movies = data.get("movies")
+            if not stop_words_data:
+                return
 
-                found = []
+            if not movies_data:
+                return
 
-                if not movies:
+            for movie in movies_data:
+                title_movie = movie["title"]
+                title_arr = preprocess(title_movie)
+                query_arr = preprocess(args.query)
+
+                for query in query_arr:
+                    found_match = False
+                    for title in title_arr:
+                        if query in title:
+                            found.append(title_movie)
+                            found_match = True
+                            break
+                    if found_match:
+                        break
+
+            count = 0
+            for title in found:
+                count += 1
+
+                if count > 5:
                     return
 
-                for movie in movies:
-                    title_movie = movie["title"]
-                    t = str.maketrans("", "", string.punctuation)
-                    title_arr = title_movie.lower().translate(t).split()
-                    query_arr = args.query.lower().translate(t).split()
-
-                    for query in query_arr:
-                        found_match = False
-                        for title in title_arr:
-                            if query in title:
-                                found.append(title_movie)
-                                found_match = True
-                                break
-                        if found_match:
-                            break
-
-                count = 0
-                for title in found:
-                    count += 1
-
-                    if count > 5:
-                        return
-
-                    print(f"{count}: {title}")
+                print(f"{count}: {title}")
 
         case _:
             parser.print_help()
