@@ -53,7 +53,12 @@ class InvertedIndex:
                 self.index[text] = {doc_id}
 
     def get_documents(self, term):
-        return self.index.get(term)
+        arr = self.index.get(term)
+
+        if not arr:
+            return
+
+        return list(sorted(arr))
 
     def build(self):
         for movie in MOVIES_DATA:
@@ -77,7 +82,8 @@ def build_command():
     inverted_index.build()
     inverted_index.save()
     docs = inverted_index.get_documents("merida")
-    print(f"First document for token 'merida' = {docs[0]}")
+    if docs:
+        print(f"First document for token 'merida' = {docs[0]}")
 
 
 def main() -> None:
