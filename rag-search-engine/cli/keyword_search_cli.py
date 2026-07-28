@@ -23,15 +23,17 @@ def load_stop_words():
 MOVIES_DATA = load_movies()
 STOP_WORDS_DATA = load_stop_words()
 TABLE_PUNCTUATION = str.maketrans("", "", string.punctuation)
+STEMMER = PorterStemmer()
 
 
 def preprocess(input: str):
     input = input.lower()
     input = input.translate(TABLE_PUNCTUATION)
     arr = input.split()
-    arr = list(filter(lambda x: x not in STOP_WORDS_DATA, arr))
+    arr = filter(lambda x: x not in STOP_WORDS_DATA, arr)
+    arr = map(lambda x: STEMMER.stem(x), arr)
 
-    return arr
+    return list(arr)
 
 
 def main() -> None:
@@ -56,10 +58,11 @@ def main() -> None:
             if not MOVIES_DATA:
                 return
 
+            query_arr = preprocess(args.query)
+
             for movie in MOVIES_DATA:
                 title_movie = movie["title"]
                 title_arr = preprocess(title_movie)
-                query_arr = preprocess(args.query)
 
                 for query in query_arr:
                     found_match = False
