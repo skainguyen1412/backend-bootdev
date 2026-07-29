@@ -1,119 +1,8 @@
 import argparse
-import json
-import string
-import pickle
-import os
-from typing import Any, Counter
-from nltk.stem import PorterStemmer
 
 
-def load_movies():
-    with open("data/movies.json") as f:
-        try:
-            return json.load(f).get("movies")
-        except Exception as e:
-            raise Exception(f"Lỗi nạp movies.json: {e}")
-
-
-def load_stop_words():
-    with open("data/stopwords.txt") as f:
-        try:
-            return f.read().splitlines()
-        except Exception as e:
-            raise Exception(f"Lỗi nạp stopwords.txt: {e}")
-
-
-MOVIES_DATA = load_movies()
-STOP_WORDS_DATA = load_stop_words()
-TABLE_PUNCTUATION = str.maketrans("", "", string.punctuation)
-STEMMER = PorterStemmer()
-
-
-def preprocess(input: str):
-    input = input.lower()
-    input = input.translate(TABLE_PUNCTUATION)
-    arr = input.split()
-    arr = filter(lambda x: x not in STOP_WORDS_DATA, arr)
-    arr = map(lambda x: STEMMER.stem(x), arr)
-
-    return list(arr)
-
-
-def single_token(input: str):
-    result = preprocess(input)
-
-    if len(result) != 1:
-        raise ValueError("Should only one token")
-
-    return result[0]
-
-
-class InvertedIndex:
-    def __init__(self):
-        self.index: dict[str, set[int]] = {}
-        self.docmap: dict[int, Any] = {}
-        self.term_frequencies: dict[int, Counter] = {}
-
-    def __add_document(self, doc_id, text):
-        text_arr = preprocess(text)
-
-        for text in text_arr:
-            if text in self.index:
-                self.index[text].add(doc_id)
-            else:
-                self.index[text] = {doc_id}
-
-            if doc_id in self.term_frequencies:
-                self.term_frequencies[doc_id][text] += 1
-            else:
-                self.term_frequencies[doc_id] = Counter([text])
-
-    def get_tf(self, doc_id, term):
-        if doc_id in self.term_frequencies:
-            return self.term_frequencies[doc_id][term]
-        else:
-            return 0
-
-    def get_documents(self, term):
-        arr = self.index.get(term)
-
-        if not arr:
-            return
-
-        sorted_arr = sorted(arr)
-
-        return list(sorted_arr)
-
-    def build(self):
-        for movie in MOVIES_DATA:
-            id = movie.get("id")
-            self.docmap[id] = movie
-            self.__add_document(id, f"{movie['title']} {movie['description']}")
-
-    def save(self):
-        os.makedirs("cache", exist_ok=True)
-
-        with open("cache/index.pkl", "wb") as f:
-            pickle.dump(self.index, f)
-
-        with open("cache/docmap.pkl", "wb") as f:
-            pickle.dump(self.docmap, f)
-
-        with open("cache/term_frequencies.pkl", "wb") as f:
-            pickle.dump(self.term_frequencies, f)
-
-    def load(self):
-        try:
-            with open("cache/index.pkl", "rb") as f:
-                self.index = pickle.load(f)
-
-            with open("cache/docmap.pkl", "rb") as f:
-                self.docmap = pickle.load(f)
-
-            with open("cache/term_frequencies.pkl", "rb") as f:
-                self.term_frequencies = pickle.load(f)
-        except FileNotFoundError:
-            raise FileNotFoundError()
+from lib.inverted_index import InvertedIndex
+from lib.preprocessing import preprocess, single_token
 
 
 def build_command():
@@ -140,7 +29,6 @@ def main() -> None:
 
     match args.command:
         case "search":
-            # print the search query here
             print(f"Searching for: {args.query}")
 
             inverted_index.load()
