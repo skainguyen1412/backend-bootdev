@@ -1,7 +1,10 @@
 import string
+from typing import TYPE_CHECKING
 from nltk.stem import PorterStemmer
-
 from lib.data_loader import load_stop_words
+
+if TYPE_CHECKING:
+    from lib.inverted_index import InvertedIndex
 
 STOP_WORDS_DATA = load_stop_words()
 TABLE_PUNCTUATION = str.maketrans("", "", string.punctuation)
@@ -25,3 +28,10 @@ def single_token(input: str):
         raise ValueError("Should only one token")
 
     return result[0]
+
+
+def bm25_idf_command(inverted_index: InvertedIndex, term: str):
+    inverted_index.load()
+    single_token_term = single_token(term)
+    score = inverted_index.get_bm25_idf(single_token_term)
+    return score

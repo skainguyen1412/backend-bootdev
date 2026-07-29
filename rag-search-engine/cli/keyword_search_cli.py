@@ -6,7 +6,7 @@ import sys
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from lib.inverted_index import InvertedIndex
-from lib.preprocessing import preprocess, single_token
+from lib.preprocessing import preprocess, single_token, bm25_idf_command
 
 
 def build_command():
@@ -30,9 +30,14 @@ def main() -> None:
     idf_parser = subparsers.add_parser("idf", help="Inverse Document Frequency")
     idf_parser.add_argument("term", type=str, help="Term")
 
-    tfidf = subparsers.add_parser("tfidf", help="Search base on tf-idf")
-    tfidf.add_argument("doc_id", type=int, help="Document id")
-    tfidf.add_argument("term", type=str, help="Term")
+    tfidf_parser = subparsers.add_parser("tfidf", help="Search base on tf-idf")
+    tfidf_parser.add_argument("doc_id", type=int, help="Document id")
+    tfidf_parser.add_argument("term", type=str, help="Term")
+
+    bm25_idf_parser = subparsers.add_parser(
+        "bm25idf", help="Get BM25 IDF score for a given term"
+    )
+    bm25_idf_parser.add_argument("term", type=str, help="Term")
 
     args = parser.parse_args()
 
@@ -101,6 +106,10 @@ def main() -> None:
             print(
                 f"TF-IDF score of '{args.term}' in document '{args.doc_id}': {tf_idf:.2f}"
             )
+
+        case "bm25idf":
+            bm25idf = bm25_idf_command(inverted_index, args.term)
+            print(f"BM25 IDF score of '{args.term}': {bm25idf:.2f}")
 
         case _:
             parser.print_help()

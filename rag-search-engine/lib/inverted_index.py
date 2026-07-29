@@ -1,7 +1,7 @@
 import os
 import pickle
+import math
 from typing import Any, Counter
-
 from lib.data_loader import load_movies
 from lib.preprocessing import preprocess
 
@@ -48,6 +48,18 @@ class InvertedIndex:
             id = movie.get("id")
             self.docmap[id] = movie
             self.__add_document(id, f"{movie['title']} {movie['description']}")
+
+    def get_bm25_idf(self, term: str) -> float:
+        # term must be single token
+
+        total_doc = len(self.docmap)
+        document_frequency = len(self.get_documents(term) or [])
+
+        bm25_idf = math.log(
+            (total_doc - document_frequency + 0.5) / (document_frequency + 0.5) + 1
+        )
+
+        return bm25_idf
 
     def save(self):
         os.makedirs("cache", exist_ok=True)
