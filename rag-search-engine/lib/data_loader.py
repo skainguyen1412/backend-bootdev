@@ -1,5 +1,7 @@
 import json
 
+BM25_K1 = 1.5
+
 
 def load_movies():
     with open("data/movies.json") as f:

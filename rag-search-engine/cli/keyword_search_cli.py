@@ -5,8 +5,8 @@ import sys
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from lib.inverted_index import InvertedIndex
-from lib.preprocessing import preprocess, single_token, bm25_idf_command
+from lib.inverted_index import InvertedIndex, bm25_idf_command, bm25_tf_command
+from lib.preprocessing import preprocess, single_token, BM25_K1
 
 
 def build_command():
@@ -38,6 +38,15 @@ def main() -> None:
         "bm25idf", help="Get BM25 IDF score for a given term"
     )
     bm25_idf_parser.add_argument("term", type=str, help="Term")
+
+    bm25_tf_parser = subparsers.add_parser(
+        "bm25tf", help="Get BM25 TF score for a given document ID and term"
+    )
+    bm25_tf_parser.add_argument("doc_id", type=int, help="Document ID")
+    bm25_tf_parser.add_argument("term", type=str, help="Term to get BM25 TF score for")
+    bm25_tf_parser.add_argument(
+        "k1", type=float, nargs="?", default=BM25_K1, help="Tunable BM25 K1 parameter"
+    )
 
     args = parser.parse_args()
 
@@ -110,6 +119,12 @@ def main() -> None:
         case "bm25idf":
             bm25idf = bm25_idf_command(inverted_index, args.term)
             print(f"BM25 IDF score of '{args.term}': {bm25idf:.2f}")
+
+        case "bm25tf":
+            bm25tf = bm25_tf_command(inverted_index, args.doc_id, args.term, args.k1)
+            print(
+                f"BM25 TF score of '{args.term}' in document '{args.doc_id}': {bm25tf:.2f}"
+            )
 
         case _:
             parser.print_help()
